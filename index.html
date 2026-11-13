@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management System</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:700px;
+    background:white;
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.2);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+    color:#333;
+}
+
+.input-group{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+input{
+    flex:1;
+    padding:12px;
+    border:2px solid #ddd;
+    border-radius:10px;
+    outline:none;
+}
+
+input:focus{
+    border-color:#667eea;
+}
+
+button{
+    border:none;
+    padding:12px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.add-btn{
+    background:#667eea;
+    color:white;
+}
+
+.add-btn:hover{
+    background:#4f5bd5;
+}
+
+.student-card{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:15px;
+    margin:10px 0;
+    background:#f7f7f7;
+    border-radius:10px;
+}
+
+.actions button{
+    margin-left:5px;
+}
+
+.edit-btn{
+    background:#ffc107;
+}
+
+.delete-btn{
+    background:#dc3545;
+    color:white;
+}
+
+.empty{
+    text-align:center;
+    color:gray;
+    padding:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🎓 Student Management System</h1>
+
+    <div class="input-group">
+        <input
+            type="text"
+            id="studentName"
+            placeholder="Enter Student Name">
+        <button
+            class="add-btn"
+            onclick="addStudent()">
+            Add
+        </button>
+    </div>
+
+    <div id="studentList"></div>
+
+</div>
+
+<script>
+
+const API = "http://localhost:3000/api/students";
+
+async function loadStudents(){
+
+    const response = await fetch(API);
+    const students = await response.json();
+
+    const studentList =
+    document.getElementById("studentList");
+
+    studentList.innerHTML="";
+
+    if(students.length===0){
+        studentList.innerHTML=
+        `<div class="empty">
+        No Students Added Yet
+        </div>`;
+        return;
+    }
+
+    students.forEach(student=>{
+
+        studentList.innerHTML += `
+        <div class="student-card">
+
+            <span>${student.name}</span>
+
+            <div class="actions">
+
+                <button
+                class="edit-btn"
+                onclick="editStudent(${student.id},
+                '${student.name}')">
+                Edit
+                </button>
+
+                <button
+                class="delete-btn"
+                onclick="deleteStudent(${student.id})">
+                Delete
+                </button>
+
+            </div>
+
+        </div>
+        `;
+    });
+}
+
+async function addStudent(){
+
+    const name =
+    document.getElementById("studentName").value.trim();
+
+    if(name===""){
+        alert("Please enter student name");
+        return;
+    }
+
+    await fetch(API,{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({name})
+    });
+
+    document.getElementById("studentName").value="";
+
+    loadStudents();
+}
+
+async function deleteStudent(id){
+
+    await fetch(`${API}/${id}`,{
+        method:"DELETE"
+    });
+
+    loadStudents();
+}
+
+async function editStudent(id,currentName){
+
+    const updatedName =
+    prompt("Update Student Name",currentName);
+
+    if(!updatedName) return;
+
+    await fetch(`${API}/${id}`,{
+        method:"PUT",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            name:updatedName
+        })
+    });
+
+    loadStudents();
+}
+
+loadStudents();
+
+</script>
+
+</body>
+</html>
